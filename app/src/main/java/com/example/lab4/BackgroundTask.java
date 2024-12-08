@@ -104,7 +104,7 @@ public class BackgroundTask extends AsyncTask<String, String, String> {
                 studentValues.put("track_name", track);
                 studentValues.put("TIME", date);
                 db.insert("songs", null, studentValues);
-
+                db.close();
             }
 
         } catch (UnsupportedEncodingException e) {
