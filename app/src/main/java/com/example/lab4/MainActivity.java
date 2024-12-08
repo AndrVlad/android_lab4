@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.ConnectivityManager;
@@ -30,6 +31,7 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -92,9 +94,11 @@ public class MainActivity extends AppCompatActivity {
         String resultString = null;
         byte[] data = null;
         InputStream is = null;
-        DBHelper myDBHelper = MainActivity.myDBHelper;
+        //DBHelper myDBHelper = MainActivity.myDBHelper;
+        DBHelper myDBHelper = new DBHelper(MainActivity.this);
+        SQLiteDatabase db = myDBHelper.getWritableDatabase();
         DateFormat df = new SimpleDateFormat("HH:mm:ss");
-        SQLiteDatabase db = MainActivity.db;
+        //SQLiteDatabase db = MainActivity.db;
 
         public void MyAsyncTask() {
             //set context variables if required
@@ -159,18 +163,48 @@ public class MainActivity extends AppCompatActivity {
                     String singer = newSong.split("-")[0];
                     String track = newSong.split("-")[1];
 
-                    resultString = newSong + singer + track;
+                    resultString = "nothing";
 
-                    ContentValues studentValues = new ContentValues();
-                    String date = df.format(Calendar.getInstance().getTime());
+                    Cursor cursor = db.query("songs", new String[] {"MAX(_id) as max_id"},null, null, null, null, null);
+                    Integer id_key;
 
+                    if(cursor.moveToFirst()) {
+                        id_key = cursor.getInt(0);
+                    } else {
+                        id_key = 0;
+                    }
 
-                    studentValues.put("singer", singer);
-                    studentValues.put("track_name", track);
-                    studentValues.put("TIME", date);
-                    if((db.insert("songs", null, studentValues)) == -1)
-                        resultString = "Error DB";
-                    //db.close();
+                        if (id_key == 0) {
+                            ContentValues songValues = new ContentValues();
+                            String date = df.format(Calendar.getInstance().getTime());
+                            songValues.put("singer", singer);
+                            songValues.put("track_name", track);
+                            songValues.put("TIME", date);
+                            if ((db.insert("songs", null, songValues)) == -1)
+                                resultString = "Error DB";
+
+                        } else {
+
+                            Cursor cursor_1 = db.query ("songs",
+                                    new String[] {"_id","singer", "track_name"},
+                                    "_id = ?",
+                                    new String[] {Integer.toString(id_key)},
+                                    null, null,null);
+                            if (cursor_1.moveToFirst()) {
+                                String singer_db = cursor_1.getString(1);
+                                String track_name_db = cursor_1.getString(2);
+
+                                if (!Objects.equals(singer_db, singer) && !Objects.equals(track_name_db, track)) {
+                                    ContentValues songValues = new ContentValues();
+                                    String date = df.format(Calendar.getInstance().getTime());
+                                    songValues.put("singer", singer);
+                                    songValues.put("track_name", track);
+                                    songValues.put("TIME", date);
+                                    if((db.insert("songs", null, songValues)) == -1)
+                                        resultString = "Error DB";
+                                }
+                            }
+                        }
                 }
 
             } catch (UnsupportedEncodingException e) {
