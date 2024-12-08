@@ -1,10 +1,14 @@
 package com.example.lab4;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.net.URLEncoder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,21 +19,25 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class BackgroundTask extends AsyncTask<String, String, String> {
     String resultString = null;
     byte[] data = null;
     InputStream is = null;
-    DBHelper myDatabaseHelper;
-    SQLiteDatabase db;
+    DBHelper myDBHelper = MainActivity.myDBHelper;
+    DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    static SQLiteDatabase db = MainActivity.db;
 
-    public MyAsyncTask() {
+    public void MyAsyncTask() {
         //set context variables if required
     }
 
     @Override
     protected void onPreExecute() {
-        super.onPreExecute();
+
     }
 
     @Override
@@ -37,7 +45,13 @@ public class BackgroundTask extends AsyncTask<String, String, String> {
         String urlString = "https://media.itmo.ru/api_get_current_song.php";
         String login = "4707login";
         String password = "4707pass";
-        String parametrs = "login=" + login + "&password=" + password;
+        String parametrs = null;
+        try {
+            parametrs = "login=" + URLEncoder.encode(login, "UTF-8") +
+                    "&password=" + URLEncoder.encode(password, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         String method = "POST";
 
         try {
@@ -56,7 +70,7 @@ public class BackgroundTask extends AsyncTask<String, String, String> {
             connect.setDoInput(true);
 
             data = parametrs.getBytes("UTF-8");
-            OutputStream os = connect .getOutputStream();
+            OutputStream os = connect.getOutputStream();
             os.write(data);
             os.flush();
             os.close();
@@ -78,14 +92,19 @@ public class BackgroundTask extends AsyncTask<String, String, String> {
                 JSONObject responseJSON = new JSONObject(resultString);
                 String newSong = responseJSON.getString("info");
                 String singer = newSong.split("-")[0];
-                String title = newSong.split("-")[1];
+                String track = newSong.split("-")[1];
 
-                myDatabaseHelper = MainActivity.DBHelper;
-                db = MainActivity.myDB;
-                String lastSong = myDatabaseHelper.last_record(db);
-                if(!lastSong.equals(newSong)) {
-                    myDatabaseHelper.add_into_table(db, singer, title);
-                }
+                resultString = newSong + singer + track;
+
+                ContentValues studentValues = new ContentValues();
+                String date = df.format(Calendar.getInstance().getTime());
+
+
+                studentValues.put("singer", singer);
+                studentValues.put("track_name", track);
+                studentValues.put("TIME", date);
+                db.insert("songs", null, studentValues);
+
             }
 
         } catch (UnsupportedEncodingException e) {
@@ -96,17 +115,10 @@ public class BackgroundTask extends AsyncTask<String, String, String> {
             e.printStackTrace();
         } catch (JSONException e) {
             e.printStackTrace();
-        } catch (ProtocolException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
         }
         return resultString;
     }
+
+
 }
+

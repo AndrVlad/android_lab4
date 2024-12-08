@@ -14,7 +14,8 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    SQLiteDatabase db;
+    public static SQLiteDatabase db;
+    public static DBHelper myDBHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,8 +23,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         try {
-            DBHelper myDatabaseHelper = new DBHelper(this);
-            db = myDatabaseHelper.getWritableDatabase();
+            myDBHelper = new DBHelper(this);
+            db = myDBHelper.getWritableDatabase();
 
         } catch (SQLiteException e) {
             Toast toast = Toast.makeText(this, "Database unavailable", Toast.LENGTH_SHORT);
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(checkInternetConnection(MainActivity.this)) {
-            // вызов async
+            new BackgroundTask().execute("Hello");
         };
 
     }
@@ -54,4 +55,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     }
+
+
 }
