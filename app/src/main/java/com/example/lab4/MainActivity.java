@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Toast;
 
@@ -48,9 +49,11 @@ public class MainActivity extends AppCompatActivity {
             Toast toast = Toast.makeText(this, "Database unavailable", Toast.LENGTH_SHORT);
             toast.show();
         }
+        runAsyncTask();
 
         if(checkInternetConnection(MainActivity.this)) {
-            new BackgroundTask().execute("Hello");
+            //new BackgroundTask().execute("Hello");
+            //runAsyncTask();
         };
 
     }
@@ -72,6 +75,17 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
             return false;
         }
+    }
+
+    private void runAsyncTask() {
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                new BackgroundTask().execute("Hello");
+                handler.postDelayed(this, 10000);
+            }
+        });
     }
 
     public class BackgroundTask extends AsyncTask<String, String, String> {
@@ -154,8 +168,9 @@ public class MainActivity extends AppCompatActivity {
                     studentValues.put("singer", singer);
                     studentValues.put("track_name", track);
                     studentValues.put("TIME", date);
-                    db.insert("songs", null, studentValues);
-                    db.close();
+                    if((db.insert("songs", null, studentValues)) == -1)
+                        resultString = "Error DB";
+                    //db.close();
                 }
 
             } catch (UnsupportedEncodingException e) {
