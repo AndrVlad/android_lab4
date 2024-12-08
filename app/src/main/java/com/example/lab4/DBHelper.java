@@ -25,7 +25,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + "singer TEXT, "
                 + "track_name TEXT,"
                 + "TIME TEXT);");
-        //db.close();
+
         }
 
 

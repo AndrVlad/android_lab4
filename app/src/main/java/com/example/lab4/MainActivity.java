@@ -53,10 +53,7 @@ public class MainActivity extends AppCompatActivity {
         }
         runAsyncTask();
 
-        if(checkInternetConnection(MainActivity.this)) {
-            //new BackgroundTask().execute("Hello");
-            //runAsyncTask();
-        };
+
 
     }
 
@@ -69,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            Toast toast = Toast.makeText(this, "Подключение установлено", Toast.LENGTH_SHORT);
-            toast.show();
+
             return true;
         } else {
             Toast toast = Toast.makeText(this, "Нет подключения к Интернету", Toast.LENGTH_SHORT);
@@ -84,13 +80,17 @@ public class MainActivity extends AppCompatActivity {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                new BackgroundTask().execute("Hello");
-                handler.postDelayed(this, 10000);
+                if(checkInternetConnection(MainActivity.this)) {
+                    new BackgroundTask().execute("Hello");
+                    //runAsyncTask();
+                };
+
+                handler.postDelayed(this, 20000);
             }
         });
     }
 
-    public class BackgroundTask extends AsyncTask<String, String, String> {
+    public class BackgroundTask extends AsyncTask<String, String, Boolean> {
         String resultString = null;
         byte[] data = null;
         InputStream is = null;
@@ -98,11 +98,7 @@ public class MainActivity extends AppCompatActivity {
         DBHelper myDBHelper = new DBHelper(MainActivity.this);
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
         DateFormat df = new SimpleDateFormat("HH:mm:ss");
-        //SQLiteDatabase db = MainActivity.db;
 
-        public void MyAsyncTask() {
-            //set context variables if required
-        }
 
         @Override
         protected void onPreExecute() {
@@ -110,7 +106,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected String doInBackground(String... params) {
+        protected Boolean doInBackground(String... params) {
+            Boolean results = false;
             String urlString = "https://media.itmo.ru/api_get_current_song.php";
             String login = "4707login";
             String password = "4707pass";
@@ -129,11 +126,11 @@ public class MainActivity extends AppCompatActivity {
                 connect.setReadTimeout(10000);
                 connect.setConnectTimeout(15000);
                 connect.setRequestMethod(method);
-                //Сохранение соединения
+
                 connect.setRequestProperty("Connection", "Keep-Alive");
-                //Стандартное кодирование URL(Способ кодировки запроса)
+
                 connect.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                //Длина парамтера отправляемого на сервер
+
                 connect.setRequestProperty("Content-Length", "" + Integer.toString(parametrs.getBytes().length));
                 connect.setDoOutput(true);
                 connect.setDoInput(true);
@@ -163,8 +160,6 @@ public class MainActivity extends AppCompatActivity {
                     String singer = newSong.split("-")[0];
                     String track = newSong.split("-")[1];
 
-                    resultString = "nothing";
-
                     Cursor cursor = db.query("songs", new String[] {"MAX(_id) as max_id"},null, null, null, null, null);
                     Integer id_key;
 
@@ -180,8 +175,9 @@ public class MainActivity extends AppCompatActivity {
                             songValues.put("singer", singer);
                             songValues.put("track_name", track);
                             songValues.put("TIME", date);
+                            results = true;
                             if ((db.insert("songs", null, songValues)) == -1)
-                                resultString = "Error DB";
+                                results = false;
 
                         } else {
 
@@ -200,8 +196,9 @@ public class MainActivity extends AppCompatActivity {
                                     songValues.put("singer", singer);
                                     songValues.put("track_name", track);
                                     songValues.put("TIME", date);
+                                    results = true;
                                     if((db.insert("songs", null, songValues)) == -1)
-                                        resultString = "Error DB";
+                                        results = false;
                                 }
                             }
                         }
@@ -216,15 +213,15 @@ public class MainActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            return resultString;
+            return results;
         }
 
-        protected void onPostExecute(String success) {
-
+        protected void onPostExecute(Boolean success) {
+            if(success) {
                 Toast toast = Toast.makeText(MainActivity.this,
-                        success, Toast.LENGTH_SHORT);
+                       "Запись добавлена", Toast.LENGTH_SHORT);
                 toast.show();
-
+            }
         }
 
 

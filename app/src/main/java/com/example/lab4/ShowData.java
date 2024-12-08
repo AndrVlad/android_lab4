@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -29,28 +30,31 @@ public class ShowData extends AppCompatActivity {
 
             while (cursor.moveToNext()) {
                 TableRow tableRow = new TableRow(this);
-                String _id = cursor.getString(0);
-                String singer = cursor.getString(1);
-                String track_name = cursor.getString(2);
-                String TIME = cursor.getString(3);
 
                 TextView idTextView = new TextView(this);
-                idTextView.setText(_id);
+                idTextView.setText(cursor.getString(0));
                 idTextView.setPadding(8, 8, 8, 8);
+                idTextView.setMaxWidth(80);
                 tableRow.addView(idTextView);
 
                 TextView singerTV = new TextView(this);
-                singerTV.setText(singer);
+                singerTV.setText(cursor.getString(1));
                 singerTV.setPadding(8, 8, 8, 8);
+                singerTV.setMaxWidth(400);
+                singerTV.setEllipsize(TextUtils.TruncateAt.END);
+                singerTV.setSingleLine(true);
                 tableRow.addView(singerTV);
 
                 TextView trackTV = new TextView(this);
-                trackTV.setText(track_name);
+                trackTV.setText(cursor.getString(2));
                 trackTV.setPadding(8, 8, 8, 8);
+                trackTV.setMaxWidth(400);
+                trackTV.setEllipsize(TextUtils.TruncateAt.END);
+                trackTV.setSingleLine(false); // Разрешаем перенос
                 tableRow.addView(trackTV);
 
                 TextView TIMETextView = new TextView(this);
-                TIMETextView.setText(TIME);
+                TIMETextView.setText(cursor.getString(3));
                 TIMETextView.setPadding(8, 8, 8, 8);
                 tableRow.addView(TIMETextView);
 
