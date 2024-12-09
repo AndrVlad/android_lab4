@@ -53,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
         }
         runAsyncTask();
 
-
-
     }
 
     public void onClickBtn1(View view) {
@@ -90,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public class BackgroundTask extends AsyncTask<String, String, Boolean> {
+    public class BackgroundTask extends AsyncTask<String, Void, Boolean> {
         String resultString = null;
         byte[] data = null;
         InputStream is = null;
